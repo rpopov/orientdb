@@ -19,19 +19,18 @@
 
 package com.orientechnologies.orient.core.db.document;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.List;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.orientechnologies.orient.core.exception.OSecurityAccessException;
 import com.orientechnologies.orient.core.record.impl.ODocument;
 import com.orientechnologies.orient.core.sql.OCommandSQL;
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.List;
 
 /**
  * @author SDIPro
@@ -50,10 +49,10 @@ public class ResourceDerivedTest {
     }
 
     db.create();
-    
+
     command("CREATE CLASS Customer extends V ABSTRACT");
     command("CREATE PROPERTY Customer.name String");
-    
+
     command("CREATE CLASS Customer_t1 extends Customer");
     command("CREATE CLASS Customer_t2 extends Customer");
 
@@ -76,16 +75,16 @@ public class ResourceDerivedTest {
     command("UPDATE ORole SET inheritedRole = (SELECT FROM ORole WHERE name = 'reader') WHERE name = 'tenant2'");
 
     command("INSERT INTO OUser set name = 'tenant2', password = 'password', status = 'ACTIVE', roles = (SELECT FROM ORole WHERE name = 'tenant2')");
-    
+
     command("INSERT INTO Customer_t1 set name='Amy'");
     command("INSERT INTO Customer_t2 set name='Bob'");
 
     command("INSERT INTO Customer_u1 set name='Fred'");
     command("INSERT INTO Customer_u2 set name='George'");
-    
+
     db.close();
   }
-  
+
   private void command(String sql, Object ... params) {
     db.command(new OCommandSQL(sql)).execute(params);
   }
@@ -107,12 +106,12 @@ public class ResourceDerivedTest {
   @Test
   // This tests for a result size of three.  The "Customer_u2" record should not be included.
   public void shouldTestFiltering() {
-  	 
+
   	 db.open("tenant1", "password");
-  	 
+
   	 try {
       List<ODocument> result = query("SELECT FROM Customer");
- 
+
   	   assertThat(result).hasSize(3);
   	 } finally {
   	  	db.close();
@@ -122,12 +121,12 @@ public class ResourceDerivedTest {
   @Test
   // This should return the record in "Customer_t2" but filter out the "Customer_u2" record.
   public void shouldTestCustomer_t2() {
-  	 
+
   	 db.open("tenant1", "password");
-  	 
+
   	 try {
       List<ODocument> result = query("SELECT FROM Customer_t2");
- 
+
   	   assertThat(result).hasSize(1);
     } finally {
       db.close();
@@ -137,9 +136,9 @@ public class ResourceDerivedTest {
   @Test(expected = OSecurityAccessException.class)
   // This should throw an OSecurityAccessException when trying to read from the "Customer_u2" class.
   public void shouldTestAccess2() {
-  	 
+
   	 db.open("tenant1", "password");
-  	 
+
   	 try {
       query("SELECT FROM Customer_u2");
     } finally {
@@ -150,9 +149,9 @@ public class ResourceDerivedTest {
   @Test(expected = OSecurityAccessException.class)
   // This should throw an OSecurityAccessException when trying to read from the "Customer" class.
   public void shouldTestCustomer() {
-  	 
+
   	 db.open("tenant2", "password");
-  	 
+
   	 try {
       List<ODocument> result = query("SELECT FROM Customer");
   	 } finally {
@@ -163,12 +162,12 @@ public class ResourceDerivedTest {
   @Test
   // This tests for a result size of two.  The "Customer_t1" and "Customer_u1" records should not be included.
   public void shouldTestCustomer_t2Tenant2() {
-  	 
+
   	 db.open("tenant2", "password");
-  	 
+
   	 try {
       List<ODocument> result = query("SELECT FROM Customer_t2");
- 
+
   	   assertThat(result).hasSize(2);
   	 } finally {
   	  	db.close();
